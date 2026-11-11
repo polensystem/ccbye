@@ -235,7 +235,7 @@ const $=id=>document.getElementById(id),pad=n=>String(n).padStart(2,'0');
 const store={get(k){try{return localStorage.getItem(k)}catch(_){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(_){}}};
 let voterId=store.get('ccbye_voter');
 if(!voterId){voterId=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));store.set('ccbye_voter',voterId);}
-let sb=null, votes=[], seen=new Set(), first=true, busy=false, dbReady=false;
+let sb=null, votes=[], counts={cerrar:0,seguir:0}, seen=new Set(), first=true, busy=false, dbReady=false;
 let myVote=null; try{myVote=JSON.parse(store.get('ccbye_vote')||'null')}catch(_){}
 const forceOpen=location.hash==='#abierta'; // solo para revisar el diseño; la base de datos igual bloquea votos antes de la hora
 const isOpen=()=>forceOpen||Date.now()>=OPEN.getTime();
@@ -262,7 +262,7 @@ function render(){
  }
 }
 function renderResults(){
- const c=votes.filter(v=>v.choice==='cerrar').length, s=votes.filter(v=>v.choice==='seguir').length, tot=c+s;
+ const c=counts.cerrar, s=counts.seguir, tot=c+s;
  const pc=tot?Math.round(c*100/tot):0, ps=tot?100-pc:0;
  $('p1').textContent=pc+'%';$('p2').textContent=ps+'%';$('bar1').style.width=pc+'%';$('bar2').style.width=ps+'%';
  $('n1').textContent=c+(c===1?' voto':' votos');$('n2').textContent=s+(s===1?' voto':' votos');
@@ -290,8 +290,12 @@ $('in-voter').addEventListener('input',()=>{if(!formTouched)$('in-nombre').value
 
 async function loadVotes(){
  if(!sb)return;
- const {data,error}=await sb.from('votes').select('id,name,choice,created_at').order('created_at',{ascending:false}).limit(5000);
- if(!error){votes=data||[];renderResults();}
+ const cnt=ch=>sb.from('votes').select('id',{count:'exact',head:true}).eq('choice',ch);
+ const [a,b,l]=await Promise.all([cnt('cerrar'),cnt('seguir'),
+  sb.from('votes').select('id,name,choice,created_at').order('created_at',{ascending:false}).limit(15)]);
+ if(!a.error&&!b.error){counts={cerrar:a.count||0,seguir:b.count||0};}
+ if(!l.error)votes=l.data||[];
+ renderResults();
 }
 async function vote(choice){
  const name=$('in-voter').value.trim();
@@ -332,7 +336,7 @@ try{
   sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
   dbReady=true;render();loadVotes();
   sb.channel('votes-live').on('postgres_changes',{event:'INSERT',schema:'public',table:'votes'},p=>{
-   if(!votes.some(v=>v.id===p.new.id)){votes=[p.new,...votes];renderResults();}
+   if(!votes.some(v=>v.id===p.new.id)){votes=[p.new,...votes].slice(0,15);if(counts[p.new.choice]!=null)counts[p.new.choice]++;renderResults();}
   }).subscribe();
   setInterval(()=>{if(isOpen())loadVotes()},20000); // respaldo por si el tiempo real se corta
  }else{ $('hint').textContent='Falta configurar la base de datos.'; }

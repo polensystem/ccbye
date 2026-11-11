@@ -134,10 +134,17 @@ function renderD(){
  rows.forEach((d,i)=>{const tr=document.createElement('tr');td(tr,String(rows.length-i),'n');td(tr,fmt(d.created_at));td(tr,d.nombre||'');td(tr,d.telefono||'');td(tr,d.mail||'');tb.append(tr);});
  if(!rows.length)empty(tb,5,q?'Nada coincide con la búsqueda.':'Todavía no hay registros.');
 }
+async function fetchAll(table,cols){
+ const out=[];const step=1000;
+ for(let from=0;from<200000;from+=step){
+  const {data,error}=await sb.from(table).select(cols).order('created_at',{ascending:false}).order('id',{ascending:true}).range(from,from+step-1);
+  if(error)return {error};
+  out.push(...data);if(data.length<step)break;
+ }
+ return {data:out};
+}
 async function load(){
- const [a,b]=await Promise.all([
-  sb.from('votes').select('id,name,choice,created_at').order('created_at',{ascending:false}).limit(10000),
-  sb.from('donas').select('id,nombre,telefono,mail,created_at').order('created_at',{ascending:false}).limit(10000)]);
+ const [a,b]=await Promise.all([fetchAll('votes','id,name,choice,created_at'),fetchAll('donas','id,nombre,telefono,mail,created_at')]);
  if(a.error||b.error){$('upd').textContent='No se pudieron cargar los datos. Revisa que hayas corrido el SQL del panel.';return;}
  votes=a.data||[];donas=b.data||[];renderV();renderD();
  $('upd').textContent='Actualizado: '+new Date().toLocaleTimeString('es-EC',{timeZone:'America/Guayaquil',hour12:false});
