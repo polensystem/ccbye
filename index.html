@@ -146,6 +146,12 @@ main{position:relative;z-index:1}
 .pill.org{background:var(--wh);color:var(--blue)}
 tr.gen td{opacity:.6}
 .anote{font-size:14px;opacity:.7;margin-top:16px;line-height:1.5}
+.dcount{text-align:center;margin:-16px auto 44px}
+.dcount .num{display:block;font-size:clamp(64px,13vw,150px);line-height:1;font-variant-numeric:tabular-nums}
+.dcount .lab{display:block;font-size:clamp(15px,2vw,20px);letter-spacing:.18em;margin-top:12px}
+.dcount .live{display:inline-block;width:10px;height:10px;background:var(--wh);margin-right:10px;vertical-align:.1em;animation:bl 1.2s steps(1) infinite}
+.dcount.bump .num{animation:bump .5s steps(3)}
+@keyframes bump{0%{transform:scale(1.12)}100%{transform:scale(1)}}
 @keyframes flash{0%,66%{background:rgba(255,255,255,.25)}}
 
 </style>
@@ -204,6 +210,7 @@ tr.gen td{opacity:.6}
 
  <section class="form" id="formBox">
   <h3>DEJA TUS DATOS PARA RECIBIR<br>DONITAS GRATIS</h3>
+  <div class="dcount" id="dcount" hidden aria-live="polite"><span class="num" id="dnum">0</span><span class="lab" id="dlab"><span class="live"></span>PERSONAS YA SE INSCRIBIERON</span></div>
   <form id="frm" novalidate style="max-width:600px;margin:0 auto">
    <label class="f"><span>NOMBRE</span><input id="in-nombre" name="nombre" type="text" autocomplete="name" placeholder="Tu nombre" required></label>
    <label class="f"><span>TELÉFONO</span><input id="in-telefono" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="09 9999 9999" required></label>
@@ -317,7 +324,7 @@ $('frm').onsubmit=async e=>{e.preventDefault();const f=e.target;
  if(!sb){$('err').textContent='No se pudo conectar. Intenta en un momento.';return;}
  $('err').textContent='Enviando...';
  const {error}=await sb.from('donas').insert({nombre:n.slice(0,60),telefono:f.telefono.value.trim().slice(0,30),mail:m.slice(0,120),voter_id:voterId});
- if(!error||error.code==='23505'){store.set('ccbye_donas','1');$('err').textContent='';$('formBox').classList.add('done');}
+ if(!error||error.code==='23505'){if(!error)setDonas(donasN+1);store.set('ccbye_donas','1');$('err').textContent='';$('formBox').classList.add('done');}
  else $('err').textContent='No se pudieron guardar tus datos. Intenta otra vez.';
 };
 
@@ -329,12 +336,26 @@ $('b2').addEventListener('click',()=>track('Voto',{opcion:'seguir'}));
 $('frm').addEventListener('submit',()=>track('Formulario donitas'));
 document.querySelector('.rules a')?.addEventListener('click',()=>track('Click reglas'));
 
+// ---- contador en vivo de inscritos para donitas ----
+let donasN=null;
+function setDonas(n){
+ if(typeof n!=='number'||n<0)return;
+ const el=$('dcount'),old=donasN;donasN=n;
+ if(n===0){$('dnum').textContent='0';$('dlab').lastChild.textContent='SÉ LA PRIMERA PERSONA EN INSCRIBIRTE';el.hidden=false;return;}
+ $('dlab').lastChild.textContent=n===1?'PERSONA YA SE INSCRIBIÓ':'PERSONAS YA SE INSCRIBIERON';el.hidden=false;
+ const from=old==null?Math.max(0,n-Math.min(n,40)):old, steps=Math.min(20,Math.abs(n-from))||1;let i=0;
+ const fmtN=x=>x.toLocaleString('es-EC');
+ clearInterval(setDonas.t);setDonas.t=setInterval(()=>{i++;$('dnum').textContent=fmtN(Math.round(from+(n-from)*i/steps));if(i>=steps)clearInterval(setDonas.t);},40);
+ if(old!=null&&n>old){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+}
+async function loadDonas(){if(!sb)return;const {data,error}=await sb.rpc('donas_count');if(!error)setDonas(Number(data));}
+
 render();renderResults();tick();setInterval(tick,1000);
 
 try{
  if(window.supabase&&!SUPABASE_URL.startsWith('PEGA')){
   sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-  dbReady=true;render();loadVotes();
+  dbReady=true;render();loadVotes();loadDonas();setInterval(loadDonas,10000);
   sb.channel('votes-live').on('postgres_changes',{event:'INSERT',schema:'public',table:'votes'},p=>{
    if(!votes.some(v=>v.id===p.new.id)){votes=[p.new,...votes].slice(0,15);if(counts[p.new.choice]!=null)counts[p.new.choice]++;renderResults();}
   }).subscribe();
