@@ -75,7 +75,11 @@ main{position:relative;z-index:1}
 .f input:focus{border-bottom-color:var(--wh);background:rgba(255,255,255,.06)}
 .send{width:100%;margin-top:18px;font-size:17px;letter-spacing:2px;padding:22px;background:var(--wh);color:var(--blue);border:2px solid var(--wh);cursor:pointer}
 .send:hover{background:transparent;color:var(--wh)}
-.ok{max-width:600px;margin:0 auto;display:none;text-align:center;font-size:20px;line-height:1.6;border:2px solid var(--wh);padding:40px 20px}
+.ok{max-width:640px;margin:0 auto;display:none;text-align:center;border:2px solid var(--wh);padding:44px 22px}
+.okt{font-size:clamp(34px,6vw,56px);line-height:1}
+.okb{font-size:clamp(18px,2.4vw,22px);line-height:1.5;margin-top:18px}
+.okb b{font-weight:400}
+
 .form.done form{display:none}.form.done .ok{display:block}
 .err{font-size:14px;margin-top:12px;min-height:1em;text-align:center}
 /* boceto */
@@ -152,6 +156,12 @@ tr.gen td{opacity:.6}
 .dcount .live{display:inline-block;width:10px;height:10px;background:var(--wh);margin-right:10px;vertical-align:.1em;animation:bl 1.2s steps(1) infinite}
 .dcount.bump .num{animation:bump .5s steps(3)}
 @keyframes bump{0%{transform:scale(1.12)}100%{transform:scale(1)}}
+.evento{max-width:640px;margin:56px auto 0;border:2px solid var(--wh);padding:32px 22px;text-align:center}
+.ev-k{font-size:14px;letter-spacing:.25em;opacity:.8}
+.ev-d{font-size:clamp(30px,5.6vw,52px);line-height:1.05;margin-top:16px}
+.ev-l{font-size:clamp(20px,3vw,28px);margin-top:12px}
+.ev-h{font-size:clamp(16px,2vw,19px);margin-top:12px;opacity:.85}
+.gracias{max-width:600px;margin:40px auto 0;text-align:center;font-size:clamp(18px,2.4vw,22px);line-height:1.6}
 @keyframes flash{0%,66%{background:rgba(255,255,255,.25)}}
 
 </style>
@@ -200,7 +210,7 @@ tr.gen td{opacity:.6}
  <div class="rule"></div>
  <section class="donas">
   <h2>SÍ, TAMBIÉN<br>REGALAREMOS DONAS.</h2>
-  <p>Pronto publicaremos dónde, cuándo y cuántas.</p>
+  <p>Sábado 14 de noviembre · CC Bites de Vermont Plaza Norte · desde las 10:00.</p>
   <div class="txt">
    <p>Pase lo que pase, queremos regalarles un poquito de amor. <svg class="ico" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M2 0h4v1H2zM1 1h6v1H1zM0 2h8v1H0zM0 3h3v2H0zM5 3h3v2H5zM0 5h8v1H0zM1 6h6v1H1zM2 7h4v1H2z"/></svg> Sin importar cuál sea tu respuesta, queremos que pruebes las donitas que nos trajeron hasta aquí: las que hicimos con tanta ilusión y que nos permitieron compartir tantos momentos bonitos con ustedes.</p>
    <p>Incluso si nuestra historia termina aquí, queremos que te lleves algo dulce de nosotros. Vamos a regalar donitas. Sin condiciones, sin importar tu voto y sin esperar nada a cambio.</p>
@@ -210,7 +220,6 @@ tr.gen td{opacity:.6}
 
  <section class="form" id="formBox">
   <h3>DEJA TUS DATOS PARA RECIBIR<br>DONITAS GRATIS</h3>
-  <div class="dcount" id="dcount" hidden aria-live="polite"><span class="num" id="dnum">0</span><span class="lab" id="dlab"><span class="live"></span>PERSONAS YA SE INSCRIBIERON</span></div>
   <form id="frm" novalidate style="max-width:600px;margin:0 auto">
    <label class="f"><span>NOMBRE</span><input id="in-nombre" name="nombre" type="text" autocomplete="name" placeholder="Tu nombre" required></label>
    <label class="f"><span>TELÉFONO</span><input id="in-telefono" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="09 9999 9999" required></label>
@@ -218,8 +227,15 @@ tr.gen td{opacity:.6}
    <button class="send" type="submit">QUIERO MIS DONITAS</button>
    <p class="err" id="err"></p>
   </form>
-  <div class="ok">¡Listo! <svg class="ico" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M2 0h4v1H2zM1 1h6v1H1zM0 2h8v1H0zM0 3h3v2H0zM5 3h3v2H5zM0 5h8v1H0zM1 6h6v1H1zM2 7h4v1H2z"/></svg><br>Ya estás en la lista.<br>Pronto te contamos dónde, cuándo y cuántas.</div>
- </section>
+  <div class="ok"><p class="okt">¡LISTO! <svg class="ico" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M2 0h4v1H2zM1 1h6v1H1zM0 2h8v1H0zM0 3h3v2H0zM5 3h3v2H5zM0 5h8v1H0zM1 6h6v1H1zM2 7h4v1H2z"/></svg></p><p class="okb">Ya estás en la lista para recibir donitas gratis.</p><p class="okb">Te esperamos el <b>sábado 14 de noviembre</b> en <b>CC Bites de Vermont Plaza Norte</b>, desde las 10:00.</p></div>
+   <div class="evento">
+   <p class="ev-k"><svg class="ico" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M2 0h4v1H2zM1 1h6v1H1zM0 2h8v1H0zM0 3h3v2H0zM5 3h3v2H5zM0 5h8v1H0zM1 6h6v1H1zM2 7h4v1H2z"/></svg> DONITAS GRATIS</p>
+   <p class="ev-d">SÁBADO 14 DE NOVIEMBRE</p>
+   <p class="ev-l">CC Bites · Vermont Plaza Norte</p>
+   <p class="ev-h">Desde las 10:00 hasta agotar existencias.</p>
+  </div>
+  <p class="gracias">Gracias por acompañarnos en este camino.<br>No hay donitas en el mundo que alcancen a demostrarles nuestro agradecimiento. <svg class="ico" viewBox="0 0 7 6" shape-rendering="crispEdges" fill="currentColor"><path d="M1 0h2v1H1zM4 0h2v1H4zM0 1h1v2H0zM3 1h1v1H3zM6 1h1v2H6zM1 3h1v1H1zM5 3h1v1H5zM2 4h1v1H2zM4 4h1v1H4zM3 5h1v1H3z"/></svg></p>
+</section>
 </main>
 
 <canvas id="run"></canvas>
@@ -322,9 +338,10 @@ $('frm').onsubmit=async e=>{e.preventDefault();const f=e.target;
  const n=f.nombre.value.trim(),tl=f.telefono.value.replace(/\D/g,''),m=f.mail.value.trim();
  if(!n||tl.length<7||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m)){$('err').textContent='Revisa tus datos: nombre, teléfono y mail válidos.';return;}
  if(!sb){$('err').textContent='No se pudo conectar. Intenta en un momento.';return;}
- $('err').textContent='Enviando...';
+ $('err').textContent='Enviando...';const sendBtn=f.querySelector('.send');sendBtn.disabled=true;
  const {error}=await sb.from('donas').insert({nombre:n.slice(0,60),telefono:f.telefono.value.trim().slice(0,30),mail:m.slice(0,120),voter_id:voterId});
- if(!error||error.code==='23505'){if(!error)setDonas(donasN+1);store.set('ccbye_donas','1');$('err').textContent='';$('formBox').classList.add('done');}
+ sendBtn.disabled=false;
+ if(!error||error.code==='23505'){store.set('ccbye_donas','1');$('err').textContent='';$('formBox').classList.add('done');}
  else $('err').textContent='No se pudieron guardar tus datos. Intenta otra vez.';
 };
 
@@ -355,7 +372,7 @@ render();renderResults();tick();setInterval(tick,1000);
 try{
  if(window.supabase&&!SUPABASE_URL.startsWith('PEGA')){
   sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-  dbReady=true;render();loadVotes();loadDonas();setInterval(loadDonas,10000);
+  dbReady=true;render();loadVotes();
   sb.channel('votes-live').on('postgres_changes',{event:'INSERT',schema:'public',table:'votes'},p=>{
    if(!votes.some(v=>v.id===p.new.id)){votes=[p.new,...votes].slice(0,15);if(counts[p.new.choice]!=null)counts[p.new.choice]++;renderResults();}
   }).subscribe();
