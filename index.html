@@ -164,6 +164,15 @@ tr.gen td{opacity:.6}
 .gracias{max-width:600px;margin:40px auto 0;text-align:center;font-size:clamp(18px,2.4vw,22px);line-height:1.6}
 .tyc{font-size:15px;margin-top:22px;opacity:.85;text-align:center;line-height:1.6}
 .tyc a{color:inherit}
+.fill .track i{width:50%;transition:none}
+.fill .fa{animation:fa 6s steps(24) infinite}
+.fill .fb{animation:fb 6s steps(24) infinite}
+@keyframes fa{0%{width:30%}20%{width:62%}40%{width:44%}60%{width:71%}80%{width:38%}100%{width:30%}}
+@keyframes fb{0%{width:70%}20%{width:38%}40%{width:56%}60%{width:29%}80%{width:62%}100%{width:70%}}
+.filln{text-align:center;font-size:17px;letter-spacing:2px;margin-top:22px;opacity:.85}
+.dots::after{content:'';animation:dots 1.5s steps(4) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+@media(prefers-reduced-motion:reduce){.fill .fa,.fill .fb{animation:none}}
 @keyframes flash{0%,66%{background:rgba(255,255,255,.25)}}
 
 </style>
@@ -202,11 +211,12 @@ tr.gen td{opacity:.6}
  <p class="rules">Antes de votar podrás consultar las <a href="/terminos.html#votacion">reglas y cómo se utilizará el resultado</a>.</p>
 
  <section id="results" hidden>
-  <p class="logh">RESULTADO EN TIEMPO REAL</p>
-  <div class="rrow"><div class="rtop"><span>QUIEREN QUE CIERREN</span><span id="p1">0%</span></div><div class="track"><i id="bar1"></i></div><p class="rsub" id="n1">0 votos</p></div>
-  <div class="rrow"><div class="rtop"><span>QUIEREN QUE SIGAN</span><span id="p2">0%</span></div><div class="track"><i id="bar2"></i></div><p class="rsub" id="n2">0 votos</p></div>
-  <p class="logh">ÚLTIMOS VOTOS</p>
-  <ul id="log"><li class="empty">Todavía no hay votos.</li></ul>
+  <p class="logh">VOTACIÓN EN CURSO</p>
+  <div class="fill" aria-hidden="true">
+   <div class="rrow"><div class="rtop"><span>CERRAR</span><span>??%</span></div><div class="track"><i class="fa"></i></div></div>
+   <div class="rrow"><div class="rtop"><span>SEGUIR</span><span>??%</span></div><div class="track"><i class="fb"></i></div></div>
+  </div>
+  <p class="filln">Contando votos<span class="dots"></span></p>
  </section>
 
  <div class="rule"></div>
@@ -288,21 +298,7 @@ function render(){
   if(!busy)$('hint').textContent=!dbReady?'Conectando con la votación...':(name?'':'Escribe tu nombre para poder votar.');
  }
 }
-function renderResults(){
- const c=counts.cerrar, s=counts.seguir, tot=c+s;
- const pc=tot?Math.round(c*100/tot):0, ps=tot?100-pc:0;
- $('p1').textContent=pc+'%';$('p2').textContent=ps+'%';$('bar1').style.width=pc+'%';$('bar2').style.width=ps+'%';
- $('n1').textContent=c+(c===1?' voto':' votos');$('n2').textContent=s+(s===1?' voto':' votos');
- const ul=$('log');ul.textContent='';
- const last=[...votes].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,15);
- if(!last.length){const li=document.createElement('li');li.className='empty';li.textContent='Todavía no hay votos.';ul.append(li);}
- last.forEach(v=>{const li=document.createElement('li');
-  const tm=document.createElement('time');tm.textContent=new Date(v.created_at).toLocaleTimeString('es-EC',{timeZone:'America/Guayaquil',hour:'2-digit',minute:'2-digit',hour12:false});
-  const b=document.createElement('b');b.textContent=v.name||'Alguien';
-  const sp=document.createElement('span');sp.textContent=SHORT[v.choice]||'';
-  li.append(tm,b,sp);if(!first&&!seen.has(v.id))li.classList.add('new');ul.append(li);});
- votes.forEach(v=>seen.add(v.id));first=false;
-}
+function renderResults(){} // resultados ocultos hasta la revelación
 function tick(){
  const t=Math.floor(Math.max(0,OPEN-new Date())/1000);
  $('d').textContent=pad(Math.floor(t/86400));$('h').textContent=pad(Math.floor(t%86400/3600));
@@ -315,15 +311,7 @@ let formTouched=false;
 $('in-nombre').addEventListener('input',()=>{formTouched=true});
 $('in-voter').addEventListener('input',()=>{if(!formTouched)$('in-nombre').value=$('in-voter').value;render();});
 
-async function loadVotes(){
- if(!sb)return;
- const cnt=ch=>sb.from('votes').select('id',{count:'exact',head:true}).eq('choice',ch);
- const [a,b,l]=await Promise.all([cnt('cerrar'),cnt('seguir'),
-  sb.from('votes').select('id,name,choice,created_at').order('created_at',{ascending:false}).limit(15)]);
- if(!a.error&&!b.error){counts={cerrar:a.count||0,seguir:b.count||0};}
- if(!l.error)votes=l.data||[];
- renderResults();
-}
+async function loadVotes(){} // no se descargan votos ni nombres
 async function vote(choice){
  const name=$('in-voter').value.trim();
  if(!name){$('hint').textContent='Escribe tu nombre para poder votar.';$('in-voter').focus();return;}
@@ -377,10 +365,7 @@ try{
  if(window.supabase&&!SUPABASE_URL.startsWith('PEGA')){
   sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
   dbReady=true;render();loadVotes();
-  sb.channel('votes-live').on('postgres_changes',{event:'INSERT',schema:'public',table:'votes'},p=>{
-   if(!votes.some(v=>v.id===p.new.id)){votes=[p.new,...votes].slice(0,15);if(counts[p.new.choice]!=null)counts[p.new.choice]++;renderResults();}
-  }).subscribe();
-  setInterval(()=>{if(isOpen())loadVotes()},20000); // respaldo por si el tiempo real se corta
+
  }else{ $('hint').textContent='Falta configurar la base de datos.'; }
 }catch(_){ $('hint').textContent='No se pudo conectar con la votación.'; }
 
